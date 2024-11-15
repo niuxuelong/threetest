@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js Combined Example</title>
+    <title>Three.js Custom Map Example</title>
     <style>
         body {
             margin: 0;
@@ -37,6 +37,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
         // 创建场景
         const scene = new THREE.Scene();
@@ -48,15 +49,60 @@
         // 创建渲染器
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0x808080); // 设置背景颜色为灰色
         document.body.appendChild(renderer.domElement);
 
+        // 使用PMREMGenerator
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        pmremGenerator.compileEquirectangularShader();
+
+        // 加载HDRI环境贴图
+        new RGBELoader()
+            .setPath('images/')
+            .load('example.hdr', function (texture) { // 确保文件名正确
+                const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+
+                // 设置场景的环境贴图
+                scene.environment = envMap;
+
+                // 设置场景的背景为环境贴图
+                scene.background = envMap;
+
+                // 释放不再需要的资源
+                texture.dispose();
+                pmremGenerator.dispose();
+            });
+
+        // 加载自定义地图纹理
+        const textureLoader = new THREE.TextureLoader();
+        const mapTexture = textureLoader.load('images/map1r.png', () => {
+            // 创建平面几何体
+            const planeGeometry = new THREE.PlaneGeometry(20, 20); // 调整平面几何体的大小
+            const planeMaterial = new THREE.MeshBasicMaterial({ map: mapTexture });
+            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+
+            // 将平面几何体旋转90度
+            plane.rotation.x = -Math.PI / 2; // 绕X轴旋转90度
+            plane.position.y = -2; // 调整平面的位置，使其位于球体下方
+
+            // 将平面几何体添加到场景中
+            scene.add(plane);
+        });
+
+        // 创建一个发光的球体
+        const glowingSphereGeometry = new THREE.SphereGeometry(2, 32, 32);
+        const glowingSphereMaterial = new THREE.MeshBasicMaterial({
+            color: 0x0077ff,
+            emissive: 0x0077ff, // 设置发光颜色
+            emissiveIntensity: 0.5 // 设置发光强度
+        });
+        const glowingSphere = new THREE.Mesh(glowingSphereGeometry, glowingSphereMaterial);
+        scene.add(glowingSphere);
+
         // 创建一个网格球体
-        const sphereGeometry = new THREE.SphereGeometry(2, 32, 32);
-        const wireframeGeometry = new THREE.WireframeGeometry(sphereGeometry);
-        const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x0077ff });
-        const sphere = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
-        scene.add(sphere);
+        const wireframeGeometry = new THREE.WireframeGeometry(glowingSphereGeometry);
+        const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const wireframeSphere = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+        scene.add(wireframeSphere);
 
         // 创建一个放大的三棱锥
         const pyramidGeometry = new THREE.ConeGeometry(1, 3, 3); // 半径为1，高度为3
@@ -88,15 +134,37 @@
         controls.enableDamping = true; // 启用阻尼效果
         controls.dampingFactor = 0.25; // 阻尼系数
         controls.screenSpacePanning = false; // 禁用屏幕空间平移
+        controls.minPolarAngle = Math.PI / 180; // 最小垂直角度（10度）
+        controls.maxPolarAngle = Math.PI / 2; // 最大垂直角度（80度）
 
         const compass = document.getElementById('compass');
+
+        // 加载天空球体纹理
+        const skyTexture = textureLoader.load('images/sky_box.ad6bafcddb73df51efb4.png', () => {
+            skyTexture.wrapS = THREE.ClampToEdgeWrapping;
+            skyTexture.wrapT = THREE.ClampToEdgeWrapping;
+            skyTexture.minFilter = THREE.LinearMipMapLinearFilter;
+            skyTexture.magFilter = THREE.LinearFilter;
+
+            // 创建球体几何体
+            const skyGeometry = new THREE.SphereGeometry(500, 60, 40);
+            // 创建材质
+            const skyMaterial = new THREE.MeshBasicMaterial({
+                map: skyTexture,
+                side: THREE.BackSide // 使纹理应用在球体内部
+            });
+            // 创建球体网格
+            const skySphere = new THREE.Mesh(skyGeometry, skyMaterial);
+            scene.add(skySphere);
+        });
 
         // 渲染循环
         function animate() {
             requestAnimationFrame(animate);
 
             // 旋转球体和三棱锥
-            sphere.rotation.y += 0.01;
+            glowingSphere.rotation.y += 0.01;
+            wireframeSphere.rotation.y += 0.01;
             pyramid.rotation.y += 0.01;
             controls.update(); // 更新控制器
 
