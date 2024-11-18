@@ -24,7 +24,7 @@ pmremGenerator.compileEquirectangularShader();
 
 // 加载自定义地图纹理
 const textureLoader = new THREE.TextureLoader();
-const mapTexture = textureLoader.load('images/map1r.png', () => {
+const mapTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/niuxuelong/threetest@latest/images/map1r.png', () => {
     // 创建平面几何体
     const planeGeometry = new THREE.PlaneGeometry(20, 20); // 调整平面几何体的大小
     const planeMaterial = new THREE.MeshBasicMaterial({ map: mapTexture });
@@ -94,7 +94,7 @@ controls.maxPolarAngle = Math.PI / 2.1; // 最大垂直角度（80度）
 const compass = document.getElementById('compass');
 
 // 加载天空球体纹理
-const skyTexture = textureLoader.load('images/sky_box.ad6bafcddb73df51efb4.png', () => {
+const skyTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/niuxuelong/threetest@latest/images/sky_box.ad6bafcddb73df51efb4.png', () => {
     skyTexture.wrapS = THREE.ClampToEdgeWrapping;
     skyTexture.wrapT = THREE.ClampToEdgeWrapping;
     skyTexture.minFilter = THREE.LinearMipMapLinearFilter;
@@ -123,7 +123,7 @@ const axesHelper = new THREE.AxesHelper(5); // 参数表示坐标轴的长度
 scene.add(axesHelper); // X轴：红色 Y轴：绿色 Z轴：蓝色
 
 // 创建大门图标
-const gateTexture = textureLoader.load('images/door.svg'); // 使用SVG格式的图标
+const gateTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/niuxuelong/threetest@latest/images/door.svg'); // 使用SVG格式的图标
 const gateMaterial = new THREE.SpriteMaterial({ map: gateTexture });
 const gateSprite = new THREE.Sprite(gateMaterial);
 gateSprite.position.set(2, 0.3, 0); // 设置大门图标的位置
@@ -131,7 +131,7 @@ gateSprite.scale.set(0.5, 0.5, 0.5);
 scene.add(gateSprite);
 
 // 创建幼儿园图标
-const kindergartenTexture = textureLoader.load('images/editor.svg'); // 使用SVG格式的图标
+const kindergartenTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/niuxuelong/threetest@latest/images/editor.svg'); // 使用SVG格式的图标
 const kindergartenMaterial = new THREE.SpriteMaterial({ map: kindergartenTexture });
 const kindergartenSprite = new THREE.Sprite(kindergartenMaterial);
 kindergartenSprite.position.set(5, 0.3, 5); // 设置幼儿园图标的位置
