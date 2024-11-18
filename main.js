@@ -190,6 +190,8 @@ function animate() {
     const angle = Math.atan2(vector.x, vector.z) + Math.PI; // 加上180度
     compass.style.transform = `rotate(${angle}rad)`;
 
+    TWEEN.update(); // 更新tween动画
+
     renderer.render(scene, camera);
 }
 
@@ -204,10 +206,16 @@ window.addEventListener('resize', () => {
 
 // 点击指南针重置视角
 compass.addEventListener('click', () => {
-    // 重置相机位置
-    camera.position.copy(initialCameraPosition);
-    // 重置控件目标
-    controls.target.copy(initialTarget);
-    // 更新控件
-    controls.update();
+    // 使用tween.js平滑过渡相机位置
+    new TWEEN.Tween(camera.position)
+        .to({ x: initialCameraPosition.x, y: initialCameraPosition.y, z: initialCameraPosition.z }, 2000) // 2秒内完成过渡
+        .easing(TWEEN.Easing.Quadratic.Out) // 使用缓动函数
+        .start();
+
+    // 使用tween.js平滑过渡控件目标
+    new TWEEN.Tween(controls.target)
+        .to({ x: initialTarget.x, y: initialTarget.y, z: initialTarget.z }, 2000) // 2秒内完成过渡
+        .easing(TWEEN.Easing.Quadratic.Out) // 使用缓动函数
+        .onUpdate(() => controls.update()) // 在每次更新时调用controls.update()
+        .start();
 });
