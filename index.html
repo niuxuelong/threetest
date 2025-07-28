@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js Basic Example</title>
+    <title>图片自适应填充</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -12,43 +11,65 @@
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
+    window.onload = function() {
         // 创建场景
         const scene = new THREE.Scene();
 
         // 创建相机
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 5;
+        camera.position.z = 1;
 
         // 创建渲染器
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // 创建几何体和材质
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        // 加载图片纹理
+        const loader = new THREE.TextureLoader();
+        // ...existing code...
+        loader.load('white-image.jpg', function(texture) {
+            const imgAspect = texture.image.width / texture.image.height;
+            const winAspect = window.innerWidth / window.innerHeight;
 
-        // 创建网格并添加到场景
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
+            // 让平面宽高比和窗口一致
+            const planeHeight = 2;
+            const planeWidth = planeHeight * winAspect;
 
-        // 创建光源并添加到场景
-        const light = new THREE.PointLight(0xffffff);
-        light.position.set(10, 10, 10);
-        scene.add(light);
+            // 计算cover效果的repeat和offset
+            let repeatX = 1, repeatY = 1, offsetX = 0, offsetY = 0;
+            if (imgAspect > winAspect) {
+                // 图片比窗口宽，横向裁剪
+                repeatX = winAspect / imgAspect;
+                offsetX = (1 - repeatX) / 2;
+            } else {
+                // 图片比窗口高，纵向裁剪
+                repeatY = imgAspect / winAspect;
+                offsetY = (1 - repeatY) / 2;
+            }
+            texture.repeat.set(repeatX, repeatY);
+            texture.offset.set(offsetX, offsetY);
+            texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
 
-        // 渲染循环
+            const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+            const material = new THREE.MeshBasicMaterial({ map: texture });
+            const plane = new THREE.Mesh(geometry, material);
+            scene.add(plane);
+
+            animate();
+        });
+        // ...existing code...
+
         function animate() {
             requestAnimationFrame(animate);
-
-            // 旋转立方体
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
-
             renderer.render(scene, camera);
         }
 
-        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    }
     </script>
 </body>
 </html>
